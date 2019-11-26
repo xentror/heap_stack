@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef struct int_array_t {
     int *tab;
@@ -85,6 +86,9 @@ static int foo_1(void)
     foo_4(5);
 
     print_int_array(array_4, 5);
+
+    /* overwrite the canary: should assert */
+    //array_3.tab[-1] = 0;
     return 0;
 }
 
