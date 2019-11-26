@@ -1,7 +1,9 @@
 #include "heap-stack.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #define PAGE_SIZE 4096
 
@@ -15,9 +17,6 @@ typedef struct heap_stack_t {
     /* A pointer to the end of the stack frame */
     char *end_frame;
 
-    /* The len of the heap stack */
-    size_t len;
-
     /* The size of the heap stack */
     size_t size;
 
@@ -27,12 +26,12 @@ typedef struct heap_stack_t {
 
 heap_stack_t *h_stack_g = NULL;
 
-heap_stack_t *heap_stack_init(heap_stack_t *heap_stack)
+static heap_stack_t *heap_stack_init(heap_stack_t *heap_stack)
 {
     return memset(heap_stack, 0, sizeof(heap_stack_t));
 }
 
-heap_stack_t *heap_stack_new(void)
+static heap_stack_t *heap_stack_new(void)
 {
     heap_stack_t *heap_stack = malloc(sizeof(heap_stack_t));
     if (heap_stack == NULL) {
@@ -42,20 +41,26 @@ heap_stack_t *heap_stack_new(void)
     return heap_stack_init(heap_stack);
 }
 
-void heap_stack_wipe(heap_stack_t *heap_stack)
+static void heap_stack_wipe(heap_stack_t *heap_stack)
 {
     free(heap_stack->mem);
     free(heap_stack);
 }
 
-void heap_stack_delete(heap_stack_t **heap_stack)
+static void heap_stack_delete(heap_stack_t **heap_stack)
 {
     heap_stack_wipe(*heap_stack);
     *heap_stack = NULL;
 }
 
-int heap_stack_push_frame(heap_stack_t *heap_stack)
+static size_t heap_stack_len(heap_stack_t *heap_stack)
 {
+    return heap_stack->end_frame - (char*)heap_stack->mem;
+}
+
+static int heap_stack_push_frame(heap_stack_t *heap_stack)
+{
+    size_t prev_stack_addr;
     if (heap_stack == NULL) {
         return -1;
     }
@@ -68,19 +73,22 @@ int heap_stack_push_frame(heap_stack_t *heap_stack)
         heap_stack->prev_frame = heap_stack->mem;
         heap_stack->end_frame = heap_stack->mem;
         heap_stack->size = 100 * PAGE_SIZE;
+        heap_stack->nb_stack_frame++;
+        return 0;
     }
-    if (heap_stack->len >= heap_stack->size) {
+    if (heap_stack_len(heap_stack) >= heap_stack->size) {
         return -1;
     }
 
-    *heap_stack->prev_frame = (size_t)heap_stack->mem;
+    prev_stack_addr = (size_t)heap_stack->prev_frame;
+    heap_stack->prev_frame = (size_t*)heap_stack->end_frame;
+    *heap_stack->prev_frame = prev_stack_addr;
     heap_stack->end_frame += sizeof(size_t);
-    heap_stack->len += sizeof(size_t);
     heap_stack->nb_stack_frame++;
     return 0;
 }
 
-int heap_stack_pop_frame(heap_stack_t *heap_stack)
+static int heap_stack_pop_frame(heap_stack_t *heap_stack)
 {
     if (heap_stack == NULL || heap_stack->mem == NULL) {
         return -1;
@@ -90,9 +98,10 @@ int heap_stack_pop_frame(heap_stack_t *heap_stack)
         return 0;
     }
 
-    heap_stack->len = heap_stack->end_frame - (char*)heap_stack->prev_frame;
     heap_stack->end_frame = (void*)heap_stack->prev_frame;
-    heap_stack->prev_frame = (size_t*)*heap_stack->prev_frame;
+    if (heap_stack->prev_frame != heap_stack->mem) {
+        heap_stack->prev_frame = (size_t*)*heap_stack->prev_frame;
+    }
     heap_stack->nb_stack_frame--;
     return 0;
 }
@@ -103,6 +112,7 @@ int heap_stack_push(void)
         h_stack_g = heap_stack_new();
     }
 
+    printf("\npush stack frame n° %d\n", h_stack_g->nb_stack_frame);
     heap_stack_push_frame(h_stack_g);
     return h_stack_g->nb_stack_frame;
 }
@@ -111,19 +121,29 @@ void heap_stack_pop(int *stack_frame)
 {
     (void)stack_frame;
     heap_stack_pop_frame(h_stack_g);
+    printf("pop stack frame n° %d\n\n", h_stack_g->nb_stack_frame);
 }
 
 void *stack_malloc(size_t len)
 {
     char *res_ptr = NULL;
 
-    if (!h_stack_g || len + h_stack_g->len >= h_stack_g->size) {
+    if (!h_stack_g || len + heap_stack_len(h_stack_g) >= h_stack_g->size) {
         return NULL;
     }
 
     res_ptr = h_stack_g->end_frame;
-    h_stack_g->len += len;
     h_stack_g->end_frame += len;
 
     return res_ptr;
+}
+
+__attribute__((__destructor__))static void h_stack_shutdown(void)
+{
+    if (h_stack_g == NULL) {
+        return;
+    }
+    assert (h_stack_g->mem == h_stack_g->prev_frame);
+    assert (heap_stack_len(h_stack_g) == 0);
+    heap_stack_delete(&h_stack_g);
 }
