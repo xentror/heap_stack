@@ -6,6 +6,15 @@
 #include <assert.h>
 #include <time.h>
 
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+
+int my_getrandom(void *buf, size_t buflen, unsigned int flags)
+{
+    return (int)syscall(SYS_getrandom, buf, buflen, flags);
+}
+
 #define PAGE_SIZE 4096
 
 typedef struct heap_stack_t {
@@ -33,13 +42,16 @@ static heap_stack_t *h_stack_g = NULL;
 
 static heap_stack_t *heap_stack_init(heap_stack_t *heap_stack)
 {
-    time_t t;
-
     memset(heap_stack, 0, sizeof(heap_stack_t));
 
-    /* TODO: use /dev/urandom to ensure more safety */
-    srand((unsigned) time(&t));
-    heap_stack->canary = rand();
+    if (my_getrandom(&heap_stack->canary, sizeof(int), 0) < 0) {
+        fprintf(stderr, "unable to gerenate random canary");
+        exit(1);
+    }
+
+#ifndef NDEBUG
+    printf("canary generated: %d", heap_stack->canary);
+#endif
 
     return heap_stack;
 }
