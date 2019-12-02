@@ -48,7 +48,8 @@ static heap_stack_t *heap_stack_new(void)
 {
     heap_stack_t *heap_stack = malloc(sizeof(heap_stack_t));
     if (heap_stack == NULL) {
-        return NULL;
+        fprintf(stderr, "unable to allocate the heap stack.\n");
+        exit(1);
     }
 
     return heap_stack_init(heap_stack);
@@ -60,7 +61,7 @@ static void heap_stack_wipe(heap_stack_t *heap_stack)
     free(heap_stack);
 }
 
-__attribute__((__unused__)) static void heap_stack_delete(heap_stack_t **heap_stack)
+static void heap_stack_delete(heap_stack_t **heap_stack)
 {
     heap_stack_wipe(*heap_stack);
     *heap_stack = NULL;
@@ -71,25 +72,28 @@ static size_t heap_stack_len(heap_stack_t *heap_stack)
     return heap_stack->end_frame - (char*)heap_stack->mem;
 }
 
+
+static void heap_stack_allocate_new_memory(heap_stack_t *heap_stack)
+{
+    heap_stack->mem = malloc(100 * PAGE_SIZE);
+    if (heap_stack->mem == NULL) {
+        fprintf(stderr, "unable to allocate memory for the heap stack.\n");
+        exit(1);
+    }
+
+    heap_stack->prev_frame = heap_stack->mem;
+    heap_stack->end_frame = heap_stack->mem;
+    heap_stack->size = 100 * PAGE_SIZE;
+    heap_stack->nb_stack_frame++;
+}
+
 static int heap_stack_push_frame(heap_stack_t *heap_stack)
 {
     size_t prev_stack_addr;
     int *canary_ptr;
 
-    if (heap_stack == NULL) {
-        return -1;
-    }
-
     if (heap_stack->mem == NULL) {
-        heap_stack->mem = malloc(100 * PAGE_SIZE);
-        if (heap_stack->mem == NULL) {
-            exit(-1);
-        }
-        heap_stack->prev_frame = heap_stack->mem;
-        heap_stack->end_frame = heap_stack->mem;
-        heap_stack->size = 100 * PAGE_SIZE;
-        heap_stack->nb_stack_frame++;
-        return 0;
+        heap_stack_allocate_new_memory(heap_stack);
     }
 
     /* check that we have enough space for the 2 canaries (sizeof(init)) and
@@ -98,6 +102,7 @@ static int heap_stack_push_frame(heap_stack_t *heap_stack)
     if (heap_stack_len(heap_stack) + sizeof(int) * 2 + sizeof(size_t)
     >=  heap_stack->size)
     {
+        fprintf(stderr, "no space left in the heap stack.");
         return -1;
     }
 
@@ -147,6 +152,7 @@ static int heap_stack_pop_frame(heap_stack_t *heap_stack)
 {
 
     if (!heap_stack || !heap_stack->mem || !heap_stack->nb_stack_frame) {
+        fprintf(stderr, "try to pop an empty heap stack.\n");
         return -1;
     }
 
@@ -167,6 +173,7 @@ static int heap_stack_pop_frame(heap_stack_t *heap_stack)
 
     }
     heap_stack->nb_stack_frame--;
+
     return 0;
 }
 
