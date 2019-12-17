@@ -1,19 +1,11 @@
 #include "heap-stack.h"
+#include "heap-stack-helpers.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-
-int my_getrandom(void *buf, size_t buflen, unsigned int flags)
-{
-    return (int)syscall(SYS_getrandom, buf, buflen, flags);
-}
 
 #define PAGE_SIZE 4096
 
@@ -37,8 +29,7 @@ typedef struct heap_stack_t {
     int canary;
 } heap_stack_t;
 
-/* TODO: make it thread dependant and safe */
-static heap_stack_t *h_stack_g = NULL;
+__thread heap_stack_t *h_stack_g = NULL;
 
 static heap_stack_t *heap_stack_init(heap_stack_t *heap_stack)
 {
@@ -50,7 +41,7 @@ static heap_stack_t *heap_stack_init(heap_stack_t *heap_stack)
     }
 
 #ifndef NDEBUG
-    printf("canary generated: %d", heap_stack->canary);
+    tid_printf("canary generated: %d\n", heap_stack->canary);
 #endif
 
     return heap_stack;
@@ -70,13 +61,18 @@ static heap_stack_t *heap_stack_new(void)
 static void heap_stack_wipe(heap_stack_t *heap_stack)
 {
     free(heap_stack->mem);
-    free(heap_stack);
+    memset(heap_stack, 0, sizeof(heap_stack_t));
 }
 
 static void heap_stack_delete(heap_stack_t **heap_stack)
 {
     heap_stack_wipe(*heap_stack);
+    free(*heap_stack);
     *heap_stack = NULL;
+
+#ifndef NDEBUG
+    tid_printf("delete stack heap\n");
+#endif
 }
 
 static size_t heap_stack_len(heap_stack_t *heap_stack)
@@ -96,7 +92,6 @@ static void heap_stack_allocate_new_memory(heap_stack_t *heap_stack)
     heap_stack->prev_frame = heap_stack->mem;
     heap_stack->end_frame = heap_stack->mem;
     heap_stack->size = 100 * PAGE_SIZE;
-    heap_stack->nb_stack_frame++;
 }
 
 static int heap_stack_push_frame(heap_stack_t *heap_stack)
@@ -164,8 +159,12 @@ static int heap_stack_pop_frame(heap_stack_t *heap_stack)
 {
 
     if (!heap_stack || !heap_stack->mem || !heap_stack->nb_stack_frame) {
-        fprintf(stderr, "try to pop an empty heap stack.\n");
+        fprintf(stderr, "try to pop a non initialize or empty heap stack.\n");
         return -1;
+    } else
+    if (heap_stack->nb_stack_frame == 1) {
+        heap_stack_delete(&heap_stack);
+        return 0;
     }
 
     heap_stack->end_frame = (void*)heap_stack->prev_frame;
@@ -200,7 +199,7 @@ int heap_stack_push(void)
     }
 
 #ifndef NDEBUG
-    printf("\npush stack frame n° %d\n", h_stack_g->nb_stack_frame);
+    tid_printf("push stack frame n° %d\n", h_stack_g->nb_stack_frame);
 #endif
 
     return h_stack_g->nb_stack_frame;
@@ -208,15 +207,20 @@ int heap_stack_push(void)
 
 void heap_stack_pop(int *stack_frame)
 {
-    assert (*stack_frame == h_stack_g->nb_stack_frame);
+    int last_stack_frame;
 
+    assert (*stack_frame == h_stack_g->nb_stack_frame);
+#ifndef NDEBUG
+    tid_printf("pop stack frame n° %d\n\n", h_stack_g->nb_stack_frame);
+#endif
+
+    last_stack_frame = h_stack_g->nb_stack_frame == 1;
     if (heap_stack_pop_frame(h_stack_g) < 0) {
         exit(1);
+    } else
+    if (last_stack_frame) {
+        h_stack_g = NULL;
     }
-
-#ifndef NDEBUG
-    printf("pop stack frame n° %d\n\n", h_stack_g->nb_stack_frame);
-#endif
 }
 
 void *stack_malloc(size_t len)
@@ -231,13 +235,4 @@ void *stack_malloc(size_t len)
     h_stack_g->end_frame += len;
 
     return res_ptr;
-}
-
-__attribute__((__destructor__)) static void h_stack_shutdown(void)
-{
-    if (h_stack_g == NULL) {
-        return;
-    }
-
-    heap_stack_delete(&h_stack_g);
 }
