@@ -8,17 +8,6 @@ typedef struct node_t {
     node_t *prev;
 } node_t;
 
-
-node_t* create_node()
-{
-    node_t *res = malloc(sizeof(node_t));
-
-    res->prev = NULL;
-    res->next = NULL;
-
-    return res;
-}
-
 node_t* get_next_node(node_t *node)
 {
     if (!node) {
@@ -45,15 +34,8 @@ node_t* delete_node(node_t *node, unsigned int n)
     if (!tmp)
         return NULL;
 
-    if (n == 0) {
+    if (n == 0)
         node = node->next;
-
-        if (node)
-            node->prev = NULL;
-        free(tmp);
-
-        return node;
-    }
 
     while (tmp->next && cpt < n) {
         tmp = tmp->next;
@@ -61,13 +43,12 @@ node_t* delete_node(node_t *node, unsigned int n)
     }
 
     if (cpt != n)
-        return node;
+        return NULL;
 
     if (tmp->prev)
         tmp->prev->next = tmp->next;
     if (tmp->next)
         tmp->next->prev = tmp->prev;
-    free(tmp);
 
     return node;
 }
@@ -79,7 +60,7 @@ node_t* add_node(node_t *node, unsigned int n)
     node_t *new_node = NULL;
 
     if (!tmp)
-        return create_node();
+        return NULL;
 
     if (n == 0) {
         tmp = tmp->next;
