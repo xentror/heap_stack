@@ -1,11 +1,9 @@
-#include "linked-list.h"
-
 #include <stddef.h>
 #include <stdlib.h>
 
 typedef struct node_t {
-    node_t *next;
-    node_t *prev;
+    struct node_t *next;
+    struct node_t *prev;
 } node_t;
 
 node_t* get_next_node(node_t *node)

@@ -1,6 +1,10 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
+#ifndef GENERIC_LIST_H
+    #error Do not use this header file, use generic-list.h instead
+#endif
+
 typedef struct node_t node_t;
 
 node_t* create_node();
