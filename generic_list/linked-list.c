@@ -19,11 +19,6 @@ node_t* create_node()
     return res;
 }
 
-node_t* init_list()
-{
-    return create_node();
-}
-
 node_t* get_next_node(node_t *node)
 {
     if (!node) {
@@ -84,7 +79,7 @@ node_t* add_node(node_t *node, unsigned int n)
     node_t *new_node = NULL;
 
     if (!tmp)
-        return init_list();
+        return create_node();
 
     if (n == 0) {
         tmp = tmp->next;
