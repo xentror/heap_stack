@@ -53,22 +53,16 @@ node_t* delete_node(node_t *node, unsigned int n)
     return node;
 }
 
-node_t* add_node(node_t *node, unsigned int n)
+node_t* add_node(node_t *node, node_t *new_node, unsigned int n)
 {
     node_t *tmp = node;
     unsigned int cpt = 0;
-    node_t *new_node = NULL;
 
-    if (!tmp)
+    if (!tmp || !node || !new_node)
         return NULL;
 
-    if (n == 0) {
-        tmp = tmp->next;
-        node = create_node();
-        node->next = tmp;
-
-        return node;
-    }
+    if (n == 0)
+        node = new_node;
 
     while (tmp->next && cpt < n) {
         tmp = tmp->next;
@@ -78,7 +72,6 @@ node_t* add_node(node_t *node, unsigned int n)
     if (cpt != n)
         return node;
 
-    new_node = create_node();
     new_node->next = tmp;
     new_node->prev = tmp->prev;
 

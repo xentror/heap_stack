@@ -55,10 +55,11 @@
 #define glist_add_node(type, list, n)  \
     ({                                                                       \
         type *_list = list;                                                  \
+        node_t *node = &_list->node;                                         \
         type *_tmp_list = malloc(sizeof(type));                              \
-        node_t *_node = &_tmp_list->node;                                    \
+        node_t *_new_node = &_tmp_list->node;                                \
                                                                              \
-        _node = add_node(_node, n);                                          \
+        _node = add_node(_node, _new_node, n);                               \
         _list = get_struct_addr(_node, type, node)                           \
                                                                              \
         _list;                                                               \
