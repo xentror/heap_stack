@@ -1,5 +1,6 @@
 CC=gcc
 CFLAGS=-Werror -Wall -Wextra -pedantic -fPIC
+LINKED_LIST_OBJ= linked-list.o
 HEAP_STACK_OBJ= heap-stack.o heap-stack-helpers.o
 HEAP_STACK_TESTS_OBJ= heap-stack-tests.o heap-stack-test-1.o heap-stack-test-2.o
 
@@ -11,7 +12,7 @@ debug: all
 asan: CFLAGS += -fsanitize=address
 asan: all
 
-heap_stack: ${HEAP_STACK_OBJ} ${HEAP_STACK_TESTS_OBJ}
+heap_stack: ${HEAP_STACK_OBJ} ${HEAP_STACK_TESTS_OBJ} ${LINKED_LIST_OBJ}
 	${CC} ${CFLAGS} -o heap-stack ${STACK_OBJ} ${HEAP_STACK_OBJ} ${HEAP_STACK_TESTS_OBJ} -lpthread
 
 heap-stack.so: ${HEAP_STACK_OBJ}
