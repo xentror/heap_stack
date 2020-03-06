@@ -106,4 +106,27 @@
         _cpt;                                                                \
     })
 
+#define glist_print(type, list, print_f)  \
+    ({                                                                       \
+        unsigned int _cpt = 0;                                               \
+        type *_list = list;                                                  \
+                                                                             \
+        printf("list: ");                                                    \
+                                                                             \
+        while (_list) {                                                      \
+            node_t *_node = get_next_node(&_list->node);                     \
+            print_f(_list);                                                  \
+            printf(" ");                                                     \
+                                                                             \
+            _cpt++;                                                          \
+            if (!_node)                                                      \
+                break;                                                       \
+                                                                             \
+            _list = get_struct_addr(_node, type, node);                      \
+        }                                                                    \
+                                                                             \
+        printf("\n");                                                        \
+        _cpt;                                                                \
+    })
+
 #endif /* GENERIC_LIST_H */

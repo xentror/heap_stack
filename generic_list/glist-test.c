@@ -9,15 +9,9 @@ typedef struct integ_list {
 } integ_list_t;
 
 
-void print_integ_list(integ_list_t *list) {
-    printf("list: ");
-
-    while (list) {
-        printf("%d ", list->value);
-        list = glist_get_next_node(integ_list_t, list);
-    }
-
-    puts("");
+void print_integ_list(integ_list_t *list)
+{
+    printf("%d", list->value);
 }
 
 int main(void)
@@ -38,24 +32,24 @@ int main(void)
 
     assert (glist_get_size(integ_list_t , l) == 11);
 
-    print_integ_list(l);
+    glist_print(integ_list_t, l, print_integ_list);
 
     l = glist_delete_node(integ_list_t, l, 1);
-    print_integ_list(l);
+    glist_print(integ_list_t, l, print_integ_list);
     l = glist_delete_node(integ_list_t, l, 1);
-    print_integ_list(l);
+    glist_print(integ_list_t, l, print_integ_list);
     l = glist_delete_node(integ_list_t, l, 0);
-    print_integ_list(l);
+    glist_print(integ_list_t, l, print_integ_list);
 
     assert (glist_get_size(integ_list_t, l) == 8);
 
     new_node = glist_create(integ_list_t);
     new_node->value = 678;
     l = glist_add_node(integ_list_t, l, new_node, 0);
-    print_integ_list(l);
+    glist_print(integ_list_t, l, print_integ_list);
 
     glist_erase(integ_list_t, &l);
-    print_integ_list(l);
+    glist_print(integ_list_t, l, print_integ_list);
 
     assert (l == NULL);
     assert (glist_get_size(integ_list_t, l) == 0);
