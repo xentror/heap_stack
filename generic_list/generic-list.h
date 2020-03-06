@@ -61,17 +61,16 @@
     })
 
 
-#define glist_add_node(type, list, n)  \
+#define glist_add_node(type, list, new_list, n)  \
     ({                                                                       \
         node_t *_node;                                                       \
         type *_list = list;                                                  \
-        type *_tmp_list = calloc(sizeof(type), 0);                           \
-        node_t *_new_node = &_tmp_list->node;                                \
+        type *_new_list = new_list;                                          \
                                                                              \
-        if (!_list)                                                          \
-            _list = _tmp_list;                                               \
+        if (!_list || !new_list)                                             \
+            _list = _new_list;                                               \
         else {                                                               \
-            _node = add_node(&(_list->node), _new_node, n);                  \
+            _node = add_node(&(_list->node), &(_new_list->node), n);         \
             _list = get_struct_addr(_node, type, node);                      \
         }                                                                    \
                                                                              \
