@@ -15,4 +15,4 @@ list-test: ${OBJ} ${TEST_OBJ}
 	${CC} ${CFLAGS} -o list-test ${LIST_OBJ} ${TEST_OBJ}
 
 clean:
-	rm -rf ${OBJ} ${TEST_OBJ} list.so list-test
+	rm -rf ${LIST_OBJ} ${TEST_OBJ} list.so list-test
