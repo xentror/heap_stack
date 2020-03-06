@@ -5,7 +5,10 @@
     #error Do not use this header file, use generic-list.h instead
 #endif
 
-typedef struct node_t node_t;
+typedef struct node_t {
+    struct node_t *next;
+    struct node_t *prev;
+} node_t;
 
 node_t* create_node();
 node_t* get_next_node(node_t *node);

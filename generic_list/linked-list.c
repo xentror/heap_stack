@@ -1,10 +1,12 @@
+#ifndef GENERIC_LIST_H
+#define GENERIC_LIST_H
+
+#include "linked-list.h"
+
+#endif
+
 #include <stddef.h>
 #include <stdlib.h>
-
-typedef struct node_t {
-    struct node_t *next;
-    struct node_t *prev;
-} node_t;
 
 node_t* get_next_node(node_t *node)
 {
@@ -24,6 +26,10 @@ node_t* get_prev_node(node_t *node)
     return node->prev;
 }
 
+/* Delete the node at the n-th place in the list.
+ * Return the deleted node address.
+ * Null is return in case of error.
+ */
 node_t* delete_node(node_t *node, unsigned int n)
 {
     node_t *tmp = node;
@@ -48,7 +54,7 @@ node_t* delete_node(node_t *node, unsigned int n)
     if (tmp->next)
         tmp->next->prev = tmp->prev;
 
-    return node;
+    return tmp;
 }
 
 node_t* add_node(node_t *node, node_t *new_node, unsigned int n)
