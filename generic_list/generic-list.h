@@ -39,6 +39,18 @@
         res_list;                                                            \
     })
 
+
+#define glist_get_size(type, list)  \
+    ({                                                                       \
+        type *_list = list;                                                  \
+        unsigned int size = 0;                                               \
+                                                                             \
+        if (_list)                                                           \
+            size = get_size_list(&(_list->node));                            \
+                                                                             \
+        size;                                                                \
+    })
+
 #define glist_delete_node(type, list, n)  \
     ({                                                                       \
         type *_list = list;                                                  \
@@ -59,7 +71,6 @@
                                                                              \
         _list;                                                               \
     })
-
 
 #define glist_add_node(type, list, new_list, n)  \
     ({                                                                       \

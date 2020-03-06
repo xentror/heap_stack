@@ -1,5 +1,6 @@
 #include "generic-list.h"
 
+#include <assert.h>
 #include <stdio.h>
 
 typedef struct integ_list {
@@ -35,6 +36,8 @@ int main(void)
         l = glist_add_node(integ_list_t, l, tmp_node, 0);
     }
 
+    assert (glist_get_size(integ_list_t , l) == 11);
+
     print_integ_list(l);
 
     l = glist_delete_node(integ_list_t, l, 1);
@@ -44,6 +47,8 @@ int main(void)
     l = glist_delete_node(integ_list_t, l, 0);
     print_integ_list(l);
 
+    assert (glist_get_size(integ_list_t, l) == 8);
+
     new_node = glist_create(integ_list_t);
     new_node->value = 678;
     l = glist_add_node(integ_list_t, l, new_node, 0);
@@ -52,5 +57,7 @@ int main(void)
     glist_erase(integ_list_t, &l);
     print_integ_list(l);
 
+    assert (l == NULL);
+    assert (glist_get_size(integ_list_t, l) == 0);
     return 0;
 }
