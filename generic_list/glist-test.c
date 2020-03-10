@@ -8,7 +8,7 @@ typedef struct integ_list {
     node_t node;
 } integ_list_t;
 
-GLIST_INIT(integ_list)
+GLIST_INIT(integ_list, NULL, NULL)
 
 void print_integ_list(integ_list_t *list)
 {

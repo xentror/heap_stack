@@ -8,10 +8,14 @@
 
 #define get_struct_addr(attr_addr, type, attr) ((type*)((char*)attr_addr - offsetof(type, attr)))
 
-#define GLIST_INIT(type)  \
-glist_create_function(type)                                                  \
+#define GLIST_INIT(type, constructor, destructor)  \
+typedef type##_t* (*constructor_f)(type##_t *list);                          \
                                                                              \
-glist_erase_function(type)                                                   \
+typedef void (*destructor_f)(type##_t *list);                                \
+                                                                             \
+glist_create_function(type, constructor)                                     \
+                                                                             \
+glist_erase_function(type, destructor)                                       \
                                                                              \
 glist_get_next_node_function(type)                                           \
                                                                              \
@@ -21,7 +25,7 @@ glist_get_size_function(type)                                                \
                                                                              \
 glist_print_function(type)                                                   \
                                                                              \
-glist_delete_at_function(type)                                               \
+glist_delete_at_function(type, destructor)                                   \
                                                                              \
 glist_insert_at_function(type)                                               \
                                                                              \
@@ -31,10 +35,14 @@ glist_push_function(type)                                                    \
                                                                              \
 glist_get_at_function(type)                                                  \
 
-#define glist_create_function(type)  \
+#define glist_create_function(type, constructor)  \
 type##_t* type##_create(void)                                                \
 {                                                                            \
     type##_t *list = calloc(sizeof(type##_t), 0);                            \
+    constructor_f alloc_attributes = constructor;                            \
+                                                                             \
+    if (alloc_attributes)                                                    \
+        alloc_attributes(list);                                              \
                                                                              \
     return list;                                                             \
 }
@@ -82,10 +90,11 @@ unsigned int type##_get_size(type##_t *list)                                 \
     return size;                                                             \
 }
 
-#define glist_delete_at_function(type)  \
+#define glist_delete_at_function(type, destructor)  \
 type##_t* type##_delete_at(type##_t *list, unsigned int n)                   \
 {                                                                            \
     node_t *_node = NULL;                                                    \
+    destructor_f free_attributes = destructor;                               \
                                                                              \
     if (!list)                                                               \
         return NULL;                                                         \
@@ -99,8 +108,13 @@ type##_t* type##_delete_at(type##_t *list, unsigned int n)                   \
         else                                                                 \
             list = NULL;                                                     \
     }                                                                        \
-    if (_node)                                                               \
-        free(get_struct_addr(_node, type##_t, node));                        \
+    if (_node) {                                                             \
+        type##_t *tmp_list = get_struct_addr(_node, type##_t, node);         \
+                                                                             \
+        if (free_attributes)                                                 \
+            free_attributes(tmp_list);                                       \
+        free(tmp_list);                                                      \
+    }                                                                        \
                                                                              \
     return list;                                                             \
 }
@@ -121,11 +135,12 @@ type##_t* type##_insert_at(type##_t *list, type##_t *new_list,               \
     return list;                                                             \
 }
 
-#define glist_erase_function(type)  \
+#define glist_erase_function(type, destructor)  \
 unsigned int type##_erase(type##_t **list)                                   \
 {                                                                            \
     unsigned int cpt = 0;                                                    \
     node_t *_node = NULL;                                                    \
+    destructor_f free_attributes = destructor;                               \
                                                                              \
     if (!list || !(*list))                                                   \
         return cpt;                                                          \
@@ -135,7 +150,10 @@ unsigned int type##_erase(type##_t **list)                                   \
         type##_t *tmp_list = get_struct_addr(_node, type##_t, node);         \
         _node = get_next_node(_node);                                        \
                                                                              \
+        if (free_attributes)                                                 \
+            free_attributes(tmp_list);                                       \
         free(tmp_list);                                                      \
+                                                                             \
         cpt++;                                                               \
     }                                                                        \
     *list = NULL;                                                            \
