@@ -27,7 +27,9 @@ glist_insert_at_function(type)                                               \
                                                                              \
 glist_pop_function(type)                                                     \
                                                                              \
-glist_push_function(type)
+glist_push_function(type)                                                    \
+                                                                             \
+glist_get_at_function(type)                                                  \
 
 #define glist_create_function(type)  \
 type##_t* type##_create(void)                                                \
@@ -190,6 +192,22 @@ type##_t* type##_pop(type##_t *list)                                         \
         size = get_size_list(_node);                                         \
                                                                              \
         list = type##_delete_at(list, size - 1);                             \
+    }                                                                        \
+                                                                             \
+    return list;                                                             \
+}
+
+#define glist_get_at_function(type)  \
+type##_t* type##_get_at(type##_t *list, unsigned int n)                      \
+{                                                                            \
+    node_t *_node = NULL;                                                    \
+    unsigned int cpt = 0;                                                    \
+                                                                             \
+    while(list && cpt < n) {                                                 \
+        _node = get_next_node(&(list->node));                                \
+        list = get_struct_addr(_node, type##_t, node);                       \
+                                                                             \
+        cpt++;                                                               \
     }                                                                        \
                                                                              \
     return list;                                                             \
