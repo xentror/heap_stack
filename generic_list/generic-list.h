@@ -40,10 +40,13 @@ type##_t* type##_create(void)                                                \
 #define glist_get_next_node_function(type)  \
 type##_t* type##_get_next(type##_t *list)                                    \
 {                                                                            \
+    node_t *node = NULL;                                                     \
     type##_t *res_list = NULL;                                               \
-    node_t *node = &list->node;                                              \
-    node = get_next_node(node);                                              \
                                                                              \
+    if (!list)                                                               \
+        return NULL;                                                         \
+                                                                             \
+    node = get_next_node(&(list->node));                                     \
     if (node)                                                                \
         res_list = get_struct_addr(node, type##_t, node);                    \
                                                                              \
@@ -53,10 +56,13 @@ type##_t* type##_get_next(type##_t *list)                                    \
 #define glist_get_prev_node_function(type)  \
 type##_t* type##get_prev(type##_t *list)                                     \
 {                                                                            \
+    node_t *node = NULL;                                                     \
     type##_t *res_list = NULL;                                               \
-    node_t *node = &list->node;                                              \
-    node = get_prev_node(node);                                              \
                                                                              \
+    if (!list)                                                               \
+        return NULL;                                                         \
+                                                                             \
+    node = get_prev_node(&(list->node));                                     \
     if (node)                                                                \
         res_list = get_struct_addr(node, type##_t, node);                    \
                                                                              \
@@ -77,10 +83,12 @@ unsigned int type##_get_size(type##_t *list)                                 \
 #define glist_delete_at_function(type)  \
 type##_t* type##_delete_at(type##_t *list, unsigned int n)                   \
 {                                                                            \
-    node_t *_node = &list->node;                                             \
+    node_t *_node = NULL;                                                    \
                                                                              \
-    _node = delete_node(_node, n);                                           \
+    if (!list)                                                               \
+        return NULL;                                                         \
                                                                              \
+    _node = delete_node(&(list->node), n);                                   \
     if (_node && n == 0) {                                                   \
         node_t *_next_node = get_next_node(_node);                           \
                                                                              \
@@ -92,7 +100,7 @@ type##_t* type##_delete_at(type##_t *list, unsigned int n)                   \
     if (_node)                                                               \
         free(get_struct_addr(_node, type##_t, node));                        \
                                                                              \
-    return  list;                                                            \
+    return list;                                                             \
 }
 
 #define glist_insert_at_function(type)  \
@@ -115,8 +123,12 @@ type##_t* type##_insert_at(type##_t *list, type##_t *new_list,               \
 unsigned int type##_erase(type##_t **list)                                   \
 {                                                                            \
     unsigned int cpt = 0;                                                    \
-    node_t *_node = &((*list)->node);                                        \
+    node_t *_node = NULL;                                                    \
                                                                              \
+    if (!list || !(*list))                                                   \
+        return cpt;                                                          \
+                                                                             \
+    _node = &(*list)->node;                                                  \
     while (_node) {                                                          \
         type##_t *tmp_list = get_struct_addr(_node, type##_t, node);         \
         _node = get_next_node(_node);                                        \
