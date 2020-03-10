@@ -9,7 +9,7 @@
 #define get_struct_addr(attr_addr, type, attr) ((type*)((char*)attr_addr - offsetof(type, attr)))
 
 #define GLIST_INIT(type, constructor, destructor)  \
-typedef type##_t* (*constructor_f)(type##_t *list);                          \
+typedef type##_t* (*constructor_f)(void);                                    \
                                                                              \
 typedef void (*destructor_f)(type##_t *list);                                \
                                                                              \
@@ -38,11 +38,13 @@ glist_get_at_function(type)                                                  \
 #define glist_create_function(type, constructor)  \
 type##_t* type##_create(void)                                                \
 {                                                                            \
-    type##_t *list = calloc(sizeof(type##_t), 0);                            \
-    constructor_f alloc_attributes = constructor;                            \
+    type##_t *list = NULL;                                                   \
+    constructor_f init_object = constructor;                                 \
                                                                              \
-    if (alloc_attributes)                                                    \
-        alloc_attributes(list);                                              \
+    if (init_object)                                                         \
+        list = init_object();                                                \
+    else                                                                     \
+        list = calloc(1, sizeof(type##_t));                                  \
                                                                              \
     return list;                                                             \
 }
@@ -94,7 +96,7 @@ unsigned int type##_get_size(type##_t *list)                                 \
 type##_t* type##_delete_at(type##_t *list, unsigned int n)                   \
 {                                                                            \
     node_t *_node = NULL;                                                    \
-    destructor_f free_attributes = destructor;                               \
+    destructor_f destroy_object = destructor;                                \
                                                                              \
     if (!list)                                                               \
         return NULL;                                                         \
@@ -111,9 +113,10 @@ type##_t* type##_delete_at(type##_t *list, unsigned int n)                   \
     if (_node) {                                                             \
         type##_t *tmp_list = get_struct_addr(_node, type##_t, node);         \
                                                                              \
-        if (free_attributes)                                                 \
-            free_attributes(tmp_list);                                       \
-        free(tmp_list);                                                      \
+        if (destroy_object)                                                  \
+            destroy_object(tmp_list);                                        \
+        else                                                                 \
+            free(tmp_list);                                                  \
     }                                                                        \
                                                                              \
     return list;                                                             \
@@ -140,7 +143,7 @@ unsigned int type##_erase(type##_t **list)                                   \
 {                                                                            \
     unsigned int cpt = 0;                                                    \
     node_t *_node = NULL;                                                    \
-    destructor_f free_attributes = destructor;                               \
+    destructor_f destroy_object = destructor;                                \
                                                                              \
     if (!list || !(*list))                                                   \
         return cpt;                                                          \
@@ -150,9 +153,10 @@ unsigned int type##_erase(type##_t **list)                                   \
         type##_t *tmp_list = get_struct_addr(_node, type##_t, node);         \
         _node = get_next_node(_node);                                        \
                                                                              \
-        if (free_attributes)                                                 \
-            free_attributes(tmp_list);                                       \
-        free(tmp_list);                                                      \
+        if (destroy_object)                                                  \
+            destroy_object(tmp_list);                                        \
+        else                                                                 \
+            free(tmp_list);                                                  \
                                                                              \
         cpt++;                                                               \
     }                                                                        \
