@@ -1,5 +1,5 @@
 #include "heap-stack-tests.h"
-#include "heap-stack-helpers.h"
+#include "../heap-stack-helpers.h"
 
 int_array_t create_simple_int_array(int len)
 {

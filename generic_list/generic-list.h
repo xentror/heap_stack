@@ -174,6 +174,7 @@ unsigned int type##_print(type##_t *list, type##_print_f print)              \
                                                                              \
         printf("list: ");                                                    \
                                                                              \
+        assert (print);                                                      \
         while (list) {                                                       \
             node_t *_node = get_next_node(&list->node);                      \
             print(list);                                                     \

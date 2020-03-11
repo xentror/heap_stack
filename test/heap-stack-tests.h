@@ -1,7 +1,7 @@
 #ifndef HEAP_STACK_TESTS
 #define HEAP_STACK_TESTS
 
-#include "heap-stack.h"
+#include "../heap-stack.h"
 
 #include <stdio.h>
 #include <string.h>
